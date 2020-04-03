@@ -1,0 +1,14 @@
+@import "btn.scss";
+
+.options {
+    margin-top: 1em;
+    display: flex;
+}
+
+.options > .btn {
+    @include btn-size(50%, 2.5em);
+}
+
+.options > .btn-left {
+    margin-right: .5em;
+}

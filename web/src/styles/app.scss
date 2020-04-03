@@ -1,0 +1,72 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', serif;
+  background-color: $background-color;
+  color: $text-color;
+}
+
+.main-app {
+  margin: 0;
+  width: 95%;
+  height: 100%;
+  padding: 2%;
+}
+
+.main-header {
+    height: 10%;
+    display: flex;
+    margin-bottom: 1.5em;
+}
+
+.main-header > .picture {
+    img {
+        height: 4.25em;
+        margin-right: .75em;
+        border-radius: 50%;
+    }
+}
+
+.main-header > .title {
+    display: block;
+
+    h2 {
+        font-size: 1.75em;
+        margin: 0;
+    }
+
+    h1 {
+        font-size: 2em;
+        margin: 0;
+    }
+}
+
+.tab-view-header {
+    user-select: none;
+    margin-top: .15em;
+    display: flex;
+    margin-bottom: .75em;
+}
+
+.tab-view-header > a {
+    height: 2em;
+    padding: .15em 1em;
+    border-radius: 2em;
+    display: flex;
+    cursor: pointer;
+    margin-right: .5em;
+    color: white;
+    text-decoration: none;
+    background: rgba(#ffffff, .1);
+    margin-top: 0em;
+    font-size: 1em;
+    line-height: 2em;
+
+    &:hover {
+        background: $background-hightlight-color;
+    }
+}
+
+.tab-view-tab-active {
+    background: $background-hightlight-color;
+}

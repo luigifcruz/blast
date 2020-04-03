@@ -1,0 +1,21 @@
+.monitor {
+    margin-top: 1em;
+    background-color: rgba(#ffffff, .1);
+    border-radius: .5em;
+    padding: .5em;
+
+    .count {
+        font-size: 1.25em;
+        width: 100%;
+        text-align: center;
+        margin-bottom: .5em;
+        margin-top: .15em;
+    }
+    
+    .label {
+        background-color: rgba(#ffffff, .08);
+        border-radius: .5em;
+        padding: .4em .5em;
+        color: rgba(#ffffff, .5)
+    }
+}

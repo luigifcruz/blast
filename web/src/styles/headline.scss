@@ -1,0 +1,23 @@
+.question {
+    font-size: 1.5em;
+    margin-bottom: .5em;
+    color: rgba(#ffffff, .5);
+}
+
+.headline {
+    background-color: rgba(#ffffff, .07);
+    border-radius: .5em;
+}
+
+.headline > .header {
+    background-color: rgba(#ffffff, 0.08);
+    border-radius: 0.5em 0.5em 0em 0em;
+    padding: 0.4em 0.5em;
+    color: rgba(#ffffff, 0.5);
+  }
+
+.headline > .text {
+    padding: 0.75em 0.5em;
+    color: rgba(#ffffff, .85);
+    font-size: 1.15em;
+}
