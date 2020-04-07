@@ -10,7 +10,6 @@ module:
 
 opus:
 	cd opus && ./autogen.sh
-	cd opus && emmake make clean
 	cd opus && emconfigure ./configure CFLAGS="-O3" --disable-rtcd --disable-stack-protector \
 	--disable-intrinsics --disable-shared --enable-static
 	cd opus && emmake make -j$(nproc)
