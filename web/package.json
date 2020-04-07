@@ -50,6 +50,8 @@
     "webpackbar": "^3.1.5"
   },
   "dependencies": {
-    "jszmq": "^0.1.2"
+    "jszmq": "^0.1.2",
+    "react-feather": "^2.0.3",
+    "react-select": "^3.1.0"
   }
 }

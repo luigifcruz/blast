@@ -13,6 +13,9 @@ const prodConfig = {
   performance: {
     hints: false,
   },
+  node: {
+    fs: "empty"
+  },
   resolve: {
     extensions: ['.js', '.jsx', '.json', '.scss'],
     modules: [

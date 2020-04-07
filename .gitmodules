@@ -1,0 +1,3 @@
+[submodule "wasm/opus"]
+	path = wasm/opus
+	url = git@github.com:xiph/opus.git

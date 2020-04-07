@@ -1,0 +1,51 @@
+.slider-input {
+    appearance: none;
+    height: 25px; /* Specified height */
+    background: #d3d3d3; /* Grey background */
+    outline: none;
+    -webkit-transition: .2s; 
+    transition: opacity .2s;
+
+    ::-webkit-slider-thumb {
+        -webkit-appearance: none; /* Override default look */
+        appearance: none;
+        width: 25px; /* Set a specific slider handle width */
+        height: 25px; /* Slider handle height */
+        background: #4CAF50; /* Green background */
+        cursor: pointer; /* Cursor on hover */
+    }
+    
+    ::-moz-range-thumb {
+        width: 25px; /* Set a specific slider handle width */
+        height: 25px; /* Slider handle height */
+        background: #4CAF50; /* Green background */
+        cursor: pointer; /* Cursor on hover */
+    }
+}
+
+$primary-color: #2ecc71;
+
+
+
+#volume {
+	position: absolute;
+	left: 24px;
+	margin: 0 auto;
+	height: 5px;
+	width: 300px;
+	background: #555;
+	border-radius: 15px;
+	
+	
+	.ui-slider-handle {
+		width: 20px;
+  	    height: 20px;
+		border-radius: 20px;
+        background: #FFF;
+        position: absolute;
+        margin-left: -8px;
+        margin-top: -8px;
+        cursor: pointer;
+        outline: none;
+	}
+}

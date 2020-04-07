@@ -1,72 +1,53 @@
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Roboto', serif;
-  background-color: $background-color;
-  color: $text-color;
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', serif;
+    background-color: $background-color;
+    color: $text-color;
 }
 
-.main-app {
-  margin: 0;
-  width: 95%;
-  height: 100%;
-  padding: 2%;
+.app {
+    justify-content: center;
+    align-items: center;
+    display: grid;
 }
 
-.main-header {
-    height: 10%;
-    display: flex;
-    margin-bottom: 1.5em;
+.header {
+    margin-top: .75em;
+    margin-bottom: 1em;
 }
 
-.main-header > .picture {
-    img {
-        height: 4.25em;
-        margin-right: .75em;
-        border-radius: 50%;
-    }
+.header h1 {
+    font-family: 'Racing Sans One', serif;
+    font-weight: lighter;
+    text-align: center;
+    font-size: 2em;
+    margin: 0;
 }
 
-.main-header > .title {
-    display: block;
-
-    h2 {
-        font-size: 1.75em;
-        margin: 0;
-    }
-
-    h1 {
-        font-size: 2em;
-        margin: 0;
-    }
+.header h2 {
+    font-family: 'Press Start 2P';
+    font-weight: lighter;
+    text-align: center;
+    color: #4ACFAC;
+    font-size: 2.15em;
+    margin: 0;
 }
 
-.tab-view-header {
-    user-select: none;
-    margin-top: .15em;
-    display: flex;
-    margin-bottom: .75em;
+.block {
+    border-radius: 0.75em;
 }
 
-.tab-view-header > a {
-    height: 2em;
-    padding: .15em 1em;
-    border-radius: 2em;
-    display: flex;
-    cursor: pointer;
-    margin-right: .5em;
-    color: white;
-    text-decoration: none;
-    background: rgba(#ffffff, .1);
-    margin-top: 0em;
-    font-size: 1em;
-    line-height: 2em;
-
-    &:hover {
-        background: $background-hightlight-color;
-    }
+.block .block-body {
+    padding: 0.75em;
+    border-radius: 0.75em;
+    background: #3B3B3B;
+    margin-bottom: 1em;
 }
 
-.tab-view-tab-active {
-    background: $background-hightlight-color;
+.block .block-label {
+    margin-left: .5em;
+    font-size: .85em;
+    font-weight: 500;
+    color: #7E7E7E;
 }

@@ -14,6 +14,12 @@ const devConfig = {
     'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000',
     path.resolve(__dirname, 'src/client/index.jsx'),
   ],
+  node: {
+    __dirname: false,
+    fs: 'empty',
+    Buffer: false,
+    process: false
+  },
   output: {
     path: path.resolve(__dirname, 'resources'),
     filename: 'bundle.js',
@@ -63,6 +69,14 @@ const devConfig = {
         test: /\.(woff|woff2|eot|ttf|otf)$/,
         use: ['url-loader'],
       },
+      {
+        test: /\.wasm$/,
+        type: 'javascript/auto',
+        loader: 'file-loader',
+        options: {
+          name: '[name]-[hash].[ext]',         
+        }
+      }
     ],
   },
   plugins: [new WebpackBar(), new webpack.HotModuleReplacementPlugin()],

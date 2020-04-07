@@ -20,10 +20,10 @@ ofs = int(1920)
 cuda = True
 
 radios = [
-    {"freq": 97.5e6, "bw": sfs, "afs": afs },
-    { "freq": 95.5e6, "bw": sfs, "afs": afs },
-    { "freq": 94.5e6, "bw": sfs, "afs": afs },
-    { "freq": 96.9e6, "bw": sfs, "afs": afs },
+    { "freq": 97.5e6, "bw": sfs, "afs": afs, "chs": 2 },
+    { "freq": 95.5e6, "bw": sfs, "afs": afs, "chs": 2 },
+    { "freq": 94.5e6, "bw": sfs, "afs": afs, "chs": 2 },
+    { "freq": 96.9e6, "bw": sfs, "afs": afs, "chs": 2 },
 ]
 
 # ZeroMQ Declaration
@@ -79,7 +79,7 @@ async def blast():
         for i, f in enumerate(radios):
             L, R = demod.run(tuner.run(i))
             audio = np.ravel(np.column_stack((L, R))).astype(np.float32)
-            address = int(f['freq']).to_bytes(4, byteorder='little')
+            address = str(int(f['freq'])).encode("utf-8")
 
             for i in range(afs//ofs):
                 frame = audio[(i*ofs*2):((i+1)*ofs*2)]

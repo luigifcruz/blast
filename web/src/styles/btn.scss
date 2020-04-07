@@ -1,14 +1,14 @@
 .btn {
   border-radius: 0.5em;
   text-align: center;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
+  outline: none;
   color: white;
   text-decoration: none;
 }
 
 @mixin btn-size($width, $height) {
-  line-height: $height;
   height: $height;
   width: $width;
 }
