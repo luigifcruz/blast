@@ -20,9 +20,6 @@ ofs = int(1920)
 cuda = True
 
 radios = [
-    { "freq": 97.5e6, "bw": sfs, "afs": afs, "chs": 2 },
-    { "freq": 95.5e6, "bw": sfs, "afs": afs, "chs": 2 },
-    { "freq": 94.5e6, "bw": sfs, "afs": afs, "chs": 2 },
     { "freq": 96.9e6, "bw": sfs, "afs": afs, "chs": 2 },
 ]
 
@@ -32,10 +29,10 @@ ctx = Context.instance()
 ctx.setsockopt(zmq.IPV6, True)
 
 # Radio-Core Declaration
-tuner = Tuner(radios, cuda=cuda)
+tuner = Tuner(radios, sfs, cuda=cuda)
 demod = WBFM(tau, sfs, afs, sfs, cuda=cuda)
 queue = asyncio.Queue()
-sdr_buff = 1024
+sdr_buff = 1200
 
 # OPUS Declaration
 opus = opuslib.Encoder(afs, 2, opuslib.APPLICATION_AUDIO)
@@ -71,6 +68,7 @@ async def meta():
 async def blast():
     socket = ctx.socket(zmq.PUB)
     socket.bind(url + "5555")
+    
 
     while True:
         buffer = await queue.get()

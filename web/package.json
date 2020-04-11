@@ -50,8 +50,10 @@
     "webpackbar": "^3.1.5"
   },
   "dependencies": {
+    "audioworklet-polyfill": "^1.1.2",
     "jszmq": "^0.1.2",
     "react-feather": "^2.0.3",
-    "react-select": "^3.1.0"
+    "react-select": "^3.1.0",
+    "worklet-loader": "^1.0.0"
   }
 }

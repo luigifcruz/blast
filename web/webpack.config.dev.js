@@ -76,6 +76,10 @@ const devConfig = {
         options: {
           name: '[name]-[hash].[ext]',         
         }
+      },
+      {
+        test: /\.OpusWorkletProcessor\.jsx$/,
+        use: { loader: 'worklet-loader' }
       }
     ],
   },

@@ -1,18 +1,18 @@
 import 'styles/app';
 import 'styles/btn';
 import 'styles/volume';
-import 'styles/adder';
+import 'styles/finder';
 import 'styles/player';
-//import 'styles/sources';
+import 'styles/sources';
 
 import * as zmq from 'jszmq';
 
-import { Decoder, RadioWorker } from 'components/Radio';
+import { Decoder, Radio } from 'components/Radio';
+import { Play, Plus, Search, SkipBack, SkipForward, Volume1, Volume2 } from 'react-feather';
 import React, { Component } from 'react';
 import { inject, observer } from 'mobx-react';
 
 import { withRouter } from 'react-router-dom';
-import { Play, SkipBack, SkipForward, Plus, Search, Volume1, Volume2 } from 'react-feather';
 
 function commafy(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -67,10 +67,10 @@ class App extends Component {
       });
     });
 
-    new RadioWorker().then((radioWorker) => {
+    new Radio().then((radioWorker) => {
       this.setState({ radioWorker });
     });
-  }
+   }
 
   tuneRadio = () => {
     if (this.state.radioWorker) {
@@ -113,7 +113,7 @@ class App extends Component {
             </div>
             <div className="controls">
               <button><SkipBack/></button>
-              <button><Play/></button>
+              <button onClick={this.tuneRadio}><Play/></button>
               <button><SkipForward/></button>
             </div>
             <div className="volume">
@@ -123,19 +123,21 @@ class App extends Component {
             </div>
           </div>
         </div>
-        <div className="block adder">
-          <label className="block-label">ADD SOURCE</label>
+        <div className="block finder">
+          <label className="block-label">FINDER</label>
           <div className="block-body">
-            <div className="receiver">
+            <div className="search">
               <input className="text-input" type="text"></input>
-              <button className="btn btn-gray btn-connect" onClick={this.tuneRadio}>
+              <button className="btn btn-gray btn-connect">
                 <Search size={20} />
               </button>
             </div>
             <div className="station-card">
-              <div className="">PU2SPY</div>
-              <div className="">CUDA • 5 WBFM • 14 NFM</div>
-              <button><Plus/>Add</button>
+              <div className="name">PU2SPY</div>
+              <div className="description">CUDA • 5 WBFM • 14 NFM</div>
+              <button className="btn-green">
+                <Plus size={24}/>
+              </button>
             </div>
           </div>
         </div>

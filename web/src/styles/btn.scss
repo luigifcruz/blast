@@ -17,10 +17,14 @@
   border: 0.1em solid $btn-color;
   background-color: $btn-color;
   @include transition(background-color 0.1s ease-in-out);
+  @include transition(border 0.1s ease-in-out);
 
   &:hover {
-    background-color: darken($btn-color, 6%);
-    @include transition(background-color 0.2s ease-in-out);
+    border: 0.1em solid darken($btn-color, 7.5%);
+    background-color: darken($btn-color, 5%);
+
+    @include transition(background-color 0.1s ease-in-out);
+    @include transition(border 0.1s ease-in-out);
   }
 }
 
@@ -33,9 +37,9 @@
 }
 
 .btn-gray {
-    @include btn-theme(rgba(#ffffff, .1));
+  @include btn-theme(rgba(#ffffff, .1));
 }
 
 .btn-green {
-  @include btn-theme($green-color);
+  @include btn-theme(darken($green-color, 2.5%));
 }
