@@ -3,13 +3,14 @@ from zmq.asyncio import Context, Poller
 from radio.analog import WBFM
 from radio.tools import Tuner
 
-import zmq
 import json
 import asyncio
 import opuslib
+import socketio
 import importlib
 import SoapySDR
 import numpy as np
+from aiohttp import web
 
 
 # Settings (add to yml)
@@ -21,21 +22,24 @@ cuda = True
 
 radios = [
     { "freq": 96.9e6, "bw": sfs, "afs": afs, "chs": 2 },
+    { "freq": 97.5e6, "bw": sfs, "afs": afs, "chs": 2 },
 ]
 
 # ZeroMQ Declaration
-url = 'ws://0.0.0.0:'
-ctx = Context.instance()
-ctx.setsockopt(zmq.IPV6, True)
+url = '*'
+port = 8080
+sio = socketio.AsyncServer(async_mode='aiohttp', cors_allowed_origins='*')
+app = web.Application()
+sio.attach(app)
 
 # Radio-Core Declaration
 tuner = Tuner(radios, sfs, cuda=cuda)
-demod = WBFM(tau, sfs, afs, sfs, cuda=cuda)
+demod = [WBFM(tau, sfs, afs, sfs, cuda=cuda) for _ in radios]
 queue = asyncio.Queue()
 sdr_buff = 1200
 
 # OPUS Declaration
-opus = opuslib.Encoder(afs, 2, opuslib.APPLICATION_AUDIO)
+opus = [opuslib.Encoder(afs, 2, opuslib.APPLICATION_AUDIO) for _ in radios]
 
 # Radio Declaration
 args = dict(driver="lime")
@@ -50,47 +54,30 @@ if cuda:
     buff = sig.get_shared_mem(tuner.size, dtype=np.complex64)
 else:
     buff = np.zeros([tuner.size], dtype=np.complex64)
-
-
-async def meta():
-    socket = ctx.socket(zmq.REP)
-    socket.bind(url + "5556")
-
-    while True:
-        message = await socket.recv()
-        message = message.decode("utf-8")
-        
-        if message == 'radios':
-            payload = json.dumps(radios)
-            await socket.send(payload.encode("utf-8"))
-
-
-async def blast():
-    socket = ctx.socket(zmq.PUB)
-    socket.bind(url + "5555")
     
 
+async def blast():   
     while True:
         buffer = await queue.get()
         tuner.load(buffer) 
 
-        for i, f in enumerate(radios):
-            L, R = demod.run(tuner.run(i))
+        for ir, f in enumerate(radios):
+            L, R = demod[ir].run(tuner.run(ir))
             audio = np.ravel(np.column_stack((L, R))).astype(np.float32)
-            address = str(int(f['freq'])).encode("utf-8")
+            address = str(int(f['freq']))
 
-            for i in range(afs//ofs):
-                frame = audio[(i*ofs*2):((i+1)*ofs*2)]
-                encoded = opus.encode_float(frame.tobytes(), len(frame)//2)
-                await socket.send_multipart([address, encoded])
-
+            for io in range(afs//ofs):
+                frame = audio[(io*ofs*2):((io+1)*ofs*2)]
+                encoded = opus[ir].encode_float(frame.tobytes(), len(frame)//2)
+                await sio.emit('data', encoded, room=address)
+                
 
 async def radio():
     while True:
         for i in range(tuner.size//sdr_buff):
             sdr.readStream(rx, [buff[(i*sdr_buff):]], sdr_buff, timeoutUs=int(1e9))
         await queue.put(buff.astype(np.complex64))
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.5)
 
 
 # Blast Settings
@@ -111,11 +98,25 @@ def exception_handler(loop, context):
     print(context)
     loop.stop()
 
+@sio.on('join')
+async def join(sid, message):
+    sio.enter_room(sid, str(message))
+    print("Adding SID", sid, "to room", str(message))
+
+@sio.on('leave')
+async def leave(sid, message):
+    sio.leave_room(sid, str(message))
+    print("Removing SID", sid, "to room", str(message))
+
+async def serve():
+    runner = web.AppRunner(app)
+    await runner.setup()
+    await web.TCPSite(runner, url, port).start()
 
 loop = asyncio.get_event_loop()
 loop.set_exception_handler(exception_handler)
 loop.run_until_complete(asyncio.wait([
-    meta(),
+    serve(),
     blast(),
     radio(),
 ]))

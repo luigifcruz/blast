@@ -32,7 +32,7 @@ class App extends Component {
       sources: [{
         host: "ws://192.168.0.19:5555", 
         stations: [{
-          frequency: 96900000,
+          frequency: 97500000,
           ofs: 1920,
           afs: 48000,
           chs: 2,
@@ -41,7 +41,7 @@ class App extends Component {
       config: {
         receiver: {
           host: "ws://192.168.0.19:5555",
-          frequency: "96900000",
+          frequency: 97500000,
         },
         decoder: {
           type: Decoder.Opus,
@@ -57,25 +57,24 @@ class App extends Component {
   componentDidMount() {
     console.log("Starting ZeroMQ Subscriber...");
 
-    const meta = zmq.socket('req');
-    meta.connect('ws://192.168.0.19:5556');
-    meta.send('radios');
-    meta.on('message', (payload) => {
-      payload = new TextDecoder("utf-8").decode(payload);
-      this.setState({
-        radios: JSON.parse(payload)
-      });
-    });
-
     new Radio().then((radioWorker) => {
       this.setState({ radioWorker });
     });
    }
 
-  tuneRadio = () => {
+  play = () => {
     if (this.state.radioWorker) {
       console.log("[APP] Tuning Radio...")
       this.state.radioWorker.tune(this.state.config);
+    }
+  }
+
+  forward = () => {
+    if (this.state.radioWorker) {
+      console.log("[APP] Forward...")
+      let config = this.state.config;
+      config.receiver.frequency = 96900000;
+      this.state.radioWorker.tune(config);
     }
   }
 
@@ -113,8 +112,8 @@ class App extends Component {
             </div>
             <div className="controls">
               <button><SkipBack/></button>
-              <button onClick={this.tuneRadio}><Play/></button>
-              <button><SkipForward/></button>
+              <button onClick={this.play}><Play/></button>
+              <button onClick={this.forward}><SkipForward/></button>
             </div>
             <div className="volume">
               <Volume1/>
