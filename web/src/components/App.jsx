@@ -8,7 +8,7 @@ import 'styles/sources';
 import * as zmq from 'jszmq';
 
 import { Decoder, Radio } from 'components/Radio';
-import { Play, Plus, Search, SkipBack, SkipForward, Volume1, Volume2 } from 'react-feather';
+import * as Feather from 'react-feather';
 import React, { Component } from 'react';
 import { inject, observer } from 'mobx-react';
 
@@ -111,14 +111,14 @@ class App extends Component {
               </div>
             </div>
             <div className="controls">
-              <button><SkipBack/></button>
-              <button onClick={this.play}><Play/></button>
-              <button onClick={this.forward}><SkipForward/></button>
+              <button><Feather.SkipBack/></button>
+              <button onClick={this.play}><Feather.Play/></button>
+              <button onClick={this.forward}><Feather.SkipForward/></button>
             </div>
             <div className="volume">
-              <Volume1/>
+              <Feather.Volume1/>
               <input type="range" min="0" max="100"></input>
-              <Volume2/>
+              <Feather.Volume2/>
             </div>
           </div>
         </div>
@@ -128,14 +128,14 @@ class App extends Component {
             <div className="search">
               <input className="text-input" type="text"></input>
               <button className="btn btn-gray btn-connect">
-                <Search size={20} />
+                <Feather.Search size={20} />
               </button>
             </div>
             <div className="station-card">
               <div className="name">PU2SPY</div>
               <div className="description">CUDA • 5 WBFM • 14 NFM</div>
               <button className="btn-green">
-                <Plus size={24}/>
+                <Feather.Plus size={24}/>
               </button>
             </div>
           </div>

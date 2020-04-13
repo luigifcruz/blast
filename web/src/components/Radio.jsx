@@ -13,6 +13,7 @@ class Radio {
         this.decoder = null;
         this.socket = null;
         this.audioCtx = null;
+        this.buffer = [];
 
         this.config = {
             receiver: {},
@@ -43,12 +44,35 @@ class Radio {
         this.malloc = this.libopus._malloc;
     }
 
-    declareAudio(volume) {
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        this.gainNode = this.audioCtx.createGain();
-        this.gainNode.gain.value = volume;
-        this.gainNode.connect(this.audioCtx.destination);
-        this.startTime = this.audioCtx.currentTime;
+    startAudioProcessor() {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+            sampleRate: 48000,
+        });
+    
+        const node = this.audioCtx.createScriptProcessor(1024, 0, 2);
+        const source = this.audioCtx.createBufferSource();
+        node.buffer = this.audioCtx.createBuffer(2, 1024, 48000);
+        console.log(node.buffer)
+    
+        node.onaudioprocess = (event) => {
+            const chs = event.outputBuffer.numberOfChannels;
+            const bsz = event.outputBuffer.length;
+            console.log(chs)
+
+            if (this.buffer.length > (bsz*4)) {
+                for (var c = 0; c < chs; c++) {
+                    var channelData = event.outputBuffer.getChannelData(c);
+                    const buffer = this.buffer.splice(0, bsz*chs);
+                    for (var i = 0; i < bsz; i++) {
+                        channelData[i] = buffer[chs*i+c];  
+                    }
+                }
+            }
+        };
+
+        source.connect(node);
+        node.connect(this.audioCtx.destination);
+        source.start();
     }
 
     exportUInt8Array(data) {
@@ -92,11 +116,10 @@ class Radio {
                     this.decoder = this.newOpusDecoder(decoder.afs, decoder.chs);
             }
 
-            if (this.audioCtx !== null) {
-                this.audioCtx.suspend();
-                this.audioCtx.close();
+            this.buffer = [];
+            if (this.audioCtx === null) {
+                this.startAudioProcessor();
             }
-            this.declareAudio(config.decoder.volume);
 
             if (this.config.receiver.frequency !== undefined) {
                 this.socket.emit("leave", this.config.receiver.frequency);
@@ -114,27 +137,8 @@ class Radio {
             case Decoder.Opus:
                 pcmAudio = this.opusDecodeFloat(data);
         }
-        
-        const { chs, ofs, afs } = this.config.decoder;
-        var audioBuffer = this.audioCtx.createBuffer(chs, ofs, afs);
 
-        for (var c = 0; c < chs; c++) {
-            var channelData = audioBuffer.getChannelData(c);
-            for (var i = 0; i < ofs; i++) {
-                channelData[i] = pcmAudio[2*i+c];
-            }
-        }
-
-        var bufferSource = this.audioCtx.createBufferSource();
-        bufferSource.buffer = audioBuffer;
-        bufferSource.connect(this.gainNode);
-
-        if (this.startTime < this.audioCtx.currentTime) {
-            this.startTime = this.audioCtx.currentTime + 0.05;
-        }
-
-        bufferSource.start(this.startTime);
-        this.startTime += audioBuffer.duration;
+        this.buffer.push(...pcmAudio)
     }
 };
 
