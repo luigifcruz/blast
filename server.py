@@ -108,7 +108,13 @@ async def leave(sid, message):
     sio.leave_room(sid, str(message))
     print("Removing SID", sid, "to room", str(message))
 
+async def handle(request):
+    return web.json_response(radios)
+
 async def serve():
+    app.add_routes([
+        web.get('/', handle)
+    ])
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, url, port).start()
