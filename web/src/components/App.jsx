@@ -5,10 +5,9 @@ import 'styles/finder';
 import 'styles/player';
 import 'styles/sources';
 
-import * as zmq from 'jszmq';
+import * as Feather from 'react-feather';
 
-import { Decoder, Radio } from 'components/Radio';
-import { Play, Plus, Search, SkipBack, SkipForward, Volume1, Volume2 } from 'react-feather';
+import { Codec, Radio } from 'components/Radio';
 import React, { Component } from 'react';
 import { inject, observer } from 'mobx-react';
 
@@ -27,63 +26,55 @@ class App extends Component {
 
     this.store = this.props.store;
     this.state = {
-      radioWorker: null,
-      selectedRadio: null,
-      sources: [{
-        host: "ws://192.168.0.19:5555", 
-        stations: [{
-          frequency: 97500000,
-          ofs: 1920,
-          afs: 48000,
-          chs: 2,
-        }]
-      }],
-      config: {
-        receiver: {
-          host: "ws://192.168.0.19:5555",
-          frequency: 97500000,
-        },
-        decoder: {
-          type: Decoder.Opus,
-          volume: 0.95,
-          ofs: 1920,
-          afs: 48000,
-          chs: 2,
-        },
-      }
+      radio: null,
+      playing: false,
+      hostname: "ws://192.168.0.19:8080",
+      station: {
+        frequency: 97500000,
+        codec: Codec.Opus,
+        ofs: 1920,
+        afs: 48000,
+        chs: 2,
+      },
     }
   }
 
   componentDidMount() {
     console.log("Starting ZeroMQ Subscriber...");
 
-    new Radio().then((radioWorker) => {
-      this.setState({ radioWorker });
+    new Radio().then((radio) => {
+      this.setState({ radio });
     });
-   }
+  }
 
-  play = () => {
-    if (this.state.radioWorker) {
-      console.log("[APP] Tuning Radio...")
-      this.state.radioWorker.tune(this.state.config);
+  togglePlayback = () => {
+    const { playing, radio, hostname, station } = this.state;
+
+    if (radio) {
+      if (playing) {
+        radio.stop();
+      } else {
+        radio.tune(hostname, station);
+      }
+      this.setState({ playing: !playing });
     }
   }
 
   forward = () => {
-    if (this.state.radioWorker) {
-      console.log("[APP] Forward...")
-      let config = this.state.config;
-      config.receiver.frequency = 96900000;
-      this.state.radioWorker.tune(config);
+    if (this.state.radio) {
+      let station = this.state.station;
+      station.frequency = 96900000;
+      this.setState({ station });
+      this.state.radio.tune(this.state.hostname, station);
     }
   }
 
   render() {
-    const { afs, chs, type, volume } = this.state.config.decoder;
-    const { frequency, host} = this.state.config.receiver;
+    const { afs, chs, codec, frequency } = this.state.station;
+    const { hostname } = this.state;
 
     let channel = ((chs == 2) ? 'MONO' : 'STEREO');
-    let decoder = ((type == Decoder.Opus) ? 'OPUS' : 'WAV');
+    let decoder = ((codec == Codec.Opus) ? 'OPUS' : 'WAV');
 
     return (
       <div className="app main-app-dark">
@@ -111,14 +102,16 @@ class App extends Component {
               </div>
             </div>
             <div className="controls">
-              <button><SkipBack/></button>
-              <button onClick={this.play}><Play/></button>
-              <button onClick={this.forward}><SkipForward/></button>
+              <button><Feather.SkipBack/></button>
+              <button onClick={this.togglePlayback}>
+                {this.state.playing ? <Feather.Pause/> : <Feather.Play/>}
+              </button>
+              <button onClick={this.forward}><Feather.SkipForward/></button>
             </div>
             <div className="volume">
-              <Volume1/>
+              <Feather.Volume1/>
               <input type="range" min="0" max="100"></input>
-              <Volume2/>
+              <Feather.Volume2/>
             </div>
           </div>
         </div>
@@ -128,14 +121,14 @@ class App extends Component {
             <div className="search">
               <input className="text-input" type="text"></input>
               <button className="btn btn-gray btn-connect">
-                <Search size={20} />
+                <Feather.Search size={20} />
               </button>
             </div>
             <div className="station-card">
               <div className="name">PU2SPY</div>
               <div className="description">CUDA • 5 WBFM • 14 NFM</div>
               <button className="btn-green">
-                <Plus size={24}/>
+                <Feather.Plus size={24}/>
               </button>
             </div>
           </div>

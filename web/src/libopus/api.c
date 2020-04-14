@@ -53,7 +53,7 @@ float* deinterleave(float* interleaved, int frame_size, int channels) {
 
     for (int c = 0; c < channels; c++) {
         for (int i = 0; i < frame_size; i++) {
-            linear[i] = interleaved[2*i+c];
+            linear[i+frame_size*c] = interleaved[channels*i+c];
         }
     }
 

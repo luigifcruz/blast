@@ -1,9 +1,7 @@
 import io from 'socket.io-client';
-
 import libopus from 'libopus';
-import _ from 'lodash';
 
-const Decoder = {
+const Codec = {
     Opus: 1,
 }
 
@@ -13,20 +11,16 @@ class Radio {
         this.decoder = null;
         this.socket = null;
         this.audioCtx = null;
-
-        this.config = {
-            receiver: {},
-            decoder: {},
-        };
+        this.hostname = null;
+        this.station = null;
+        this.volume = 1.0;
 
         return new Promise((resolve) => {
             libopus().then((opus) => {
                 this.libopus = opus;
                 this.declareMethods();
-
                 console.log("[RADIO] Successfully Started.");
                 console.log("[RADIO] Opus Version:", this.opusVersion());
-
                 resolve(this);
             });
         });
@@ -35,20 +29,12 @@ class Radio {
     declareMethods() {
         // Opus Methods
         this.opusVersion = this.libopus.cwrap('version', 'string', ['']);
-        this.newOpusDecoder = this.libopus.cwrap('new_decoder', 'number', ['number', 'number']);
-        this.destroyOpusDecoder = this.libopus.cwrap('destroy_decoder', '', ['number']);
+        this._newOpusDecoder = this.libopus.cwrap('new_decoder', 'number', ['number', 'number']);
+        this._destroyOpusDecoder = this.libopus.cwrap('destroy_decoder', '', ['number']);
 
         // Standard Methods
         this.free = this.libopus._free;
         this.malloc = this.libopus._malloc;
-    }
-
-    declareAudio(volume) {
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        this.gainNode = this.audioCtx.createGain();
-        this.gainNode.gain.value = volume;
-        this.gainNode.connect(this.audioCtx.destination);
-        this.startTime = this.audioCtx.currentTime;
     }
 
     exportUInt8Array(data) {
@@ -63,71 +49,50 @@ class Radio {
         return new Float32Array(this.libopus.HEAPF32.buffer, ptr, size);
     }
 
-    opusDecodeFloat(data) {
-        const audioSize = this.config.decoder.ofs * this.config.decoder.chs;
+    _opusDecodeFloat(data) {
+        const { ofs, chs } = this.station;
         const { dataPtr, dataSize } = this.exportUInt8Array(data);
-        const audioPtr = this.libopus._decode_float(this.decoder, dataPtr, dataSize, audioSize);
+        const audioPtr = this.libopus._decode_float_linear(this.decoder, dataPtr, dataSize, ofs, chs);
         this.free(dataPtr);
-        const audioHeap = this.importFloat32Array(audioPtr, audioSize);
+        const audioHeap = this.importFloat32Array(audioPtr, ofs*chs);
         this.free(audioPtr);
         return audioHeap;
     }
 
-    tune(config) {
-        const { decoder, receiver } = config;
+    //
+    // Web Audio API Private Methods
+    //
 
-        if (receiver.host !== this.config.receiver.host) {
-            console.log("[RADIO:TUNE] Chaging the host.");
-            this.socket = io(`ws://${window.location.hostname}:8080`);
-
-            this.socket.on('data', (data) => {
-                this.play(new Uint8Array(data));
-            });
-        }
-
-        if (receiver.frequency !== this.config.receiver.frequency) {
-            switch (decoder.type) {
-                case Decoder.Opus:
-                    this.destroyOpusDecoder(this.decoder);
-                    this.decoder = this.newOpusDecoder(decoder.afs, decoder.chs);
-            }
-
-            if (this.audioCtx !== null) {
-                this.audioCtx.suspend();
-                this.audioCtx.close();
-            }
-            this.declareAudio(config.decoder.volume);
-
-            if (this.config.receiver.frequency !== undefined) {
-                this.socket.emit("leave", this.config.receiver.frequency);
-            }
-            this.socket.emit("join", receiver.frequency);
-        }
-
-        this.config = _.cloneDeep(config);
+    _startAudio() {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        this.startTime = this.audioCtx.currentTime;
     }
 
-    play(data) {
+    _stopAudio() {
+        this.audioCtx.suspend();
+        this.audioCtx.close();
+        this.audioCtx = null;
+    }
+
+    _feedAudio(data) {
+        const { chs, ofs, afs, codec } = this.station;
+
+        let audioBuffer = this.audioCtx.createBuffer(chs, ofs, afs);
         var pcmAudio = null;
-
-        switch (this.config.decoder.type) {
-            case Decoder.Opus:
-                pcmAudio = this.opusDecodeFloat(data);
-        }
-        
-        const { chs, ofs, afs } = this.config.decoder;
-        var audioBuffer = this.audioCtx.createBuffer(chs, ofs, afs);
-
-        for (var c = 0; c < chs; c++) {
-            var channelData = audioBuffer.getChannelData(c);
-            for (var i = 0; i < ofs; i++) {
-                channelData[i] = pcmAudio[2*i+c];
-            }
+    
+        switch (codec) {
+            case Codec.Opus:
+                pcmAudio = this._opusDecodeFloat(data);
         }
 
-        var bufferSource = this.audioCtx.createBufferSource();
+        for (let c = 0; c < chs; c++) {
+            const buffer = pcmAudio.slice(ofs*c, ofs*(c+1));
+            audioBuffer.copyToChannel(buffer, c, 0);
+        }
+
+        let bufferSource = this.audioCtx.createBufferSource();
         bufferSource.buffer = audioBuffer;
-        bufferSource.connect(this.gainNode);
+        bufferSource.connect(this.audioCtx.destination);
 
         if (this.startTime < this.audioCtx.currentTime) {
             this.startTime = this.audioCtx.currentTime + 0.05;
@@ -136,6 +101,83 @@ class Radio {
         bufferSource.start(this.startTime);
         this.startTime += audioBuffer.duration;
     }
+
+    //
+    // Socket.IO Private Methods
+    //
+    _connectSocket() {
+        this.socket = io(this.hostname);
+
+        this.socket.on('data', (data) => {
+            this._feedAudio(new Uint8Array(data));
+        });
+    }
+
+    _disconnectSocket() {
+        this.socket.close();
+        this.socket = null;
+    }
+
+    _leaveSocketStream(frequency) {
+        this.socket.emit("leave", frequency);
+    }
+
+    _joinSocketStream(frequency) {
+        this.socket.emit("join", frequency);
+    }
+
+    //
+    // Radio Public Methods
+    //
+    setVolume(volume) {
+        if (volume > 1.0 || volume < 0.0) {
+            console.error("[RADIO] Volume range is 0.0 to 1.0.");
+            return;
+        }
+        this.volume = volume;
+    }
+
+    tune(hostname, station) {
+        if (this.hostname !== hostname) {
+            if (this.hostname !== null) {
+                this._disconnectSocket();
+            }
+            this.hostname = hostname;
+            this._connectSocket();
+        }
+
+        if (this.station !== null) {
+            this._leaveSocketStream(this.station.frequency);
+            this._stopAudio();
+        }
+
+        this.station = {
+            frequency: station.frequency,
+            codec: station.codec,
+            ofs: station.ofs,
+            afs: station.afs,
+            chs: station.chs,
+        };
+
+        switch (this.station.codec) {
+            case Codec.Opus:
+                if (this.decoder !== null) {
+                    this._destroyOpusDecoder(this.decoder);
+                }
+                this.decoder = this._newOpusDecoder(this.station.afs, this.station.chs);
+        }
+        
+        this._startAudio();
+        this._joinSocketStream(this.station.frequency);
+    }
+    
+    stop() {
+        this._leaveSocketStream(this.station.frequency);
+        this._disconnectSocket();
+        this._stopAudio();
+        this.hostname = null;
+        this.station = null;
+    }
 };
 
-export { Radio, Decoder };
+export { Radio, Codec };

@@ -21,8 +21,8 @@ ofs = int(1920)
 cuda = True
 
 radios = [
-    { "freq": 96.9e6, "bw": sfs, "afs": afs, "chs": 2 },
-    { "freq": 97.5e6, "bw": sfs, "afs": afs, "chs": 2 },
+    { "freq": 96.9e6, "bw": sfs, "afs": afs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO },
+    { "freq": 97.5e6, "bw": sfs, "afs": afs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO},
 ]
 
 # ZeroMQ Declaration
@@ -34,12 +34,12 @@ sio.attach(app)
 
 # Radio-Core Declaration
 tuner = Tuner(radios, sfs, cuda=cuda)
-demod = [WBFM(tau, sfs, afs, sfs, cuda=cuda) for _ in radios]
+demod = [WBFM(tau, r['bw'], r['afs'], r['bw'], cuda=cuda) for r in radios]
 queue = asyncio.Queue()
 sdr_buff = 1200
 
 # OPUS Declaration
-opus = [opuslib.Encoder(afs, 2, opuslib.APPLICATION_AUDIO) for _ in radios]
+opus = [opuslib.Encoder(r['afs'], r['chs'], r['codec']) for r in radios]
 
 # Radio Declaration
 args = dict(driver="lime")

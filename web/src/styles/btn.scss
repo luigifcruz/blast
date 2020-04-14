@@ -4,8 +4,13 @@
   font-weight: 500;
   cursor: pointer;
   outline: none;
+  outline: 0;
   color: white;
   text-decoration: none;
+
+  &::-moz-focus-inner {
+    border:0;
+  }
 }
 
 @mixin btn-size($width, $height) {
