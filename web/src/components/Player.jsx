@@ -2,10 +2,11 @@ import 'styles/player';
 import 'styles/volume';
 
 import * as Feather from 'react-feather';
-import { Codec, Radio } from 'components/Radio';
+
 import React, { Component } from 'react';
 import { inject, observer } from 'mobx-react';
 import { ParseFrequency } from 'misc/utils';
+import { Codec, Radio } from 'components/Radio';
 
 @inject('store')
 @observer
@@ -17,9 +18,10 @@ class Player extends Component {
     this.state = {
       radio: null,
       playing: false,
+      volume: 1.0,
       hostname: "ws://192.168.0.19:8080",
       station: {
-        frequency: 97500000,
+        frequency: 173500000,
         codec: Codec.Opus,
         ofs: 1920,
         afs: 48000,
@@ -28,13 +30,7 @@ class Player extends Component {
     }
   }
 
-  componentDidMount() {
-    new Radio().then((radio) => {
-      this.setState({ radio });
-    });
-  }
-
-  togglePlayback = () => {
+  handlePlayback = () => {
     const { playing, radio, hostname, station } = this.state;
 
     if (radio) {
@@ -47,7 +43,7 @@ class Player extends Component {
     }
   }
 
-  forward = () => {
+  handleForward = () => {
     if (this.state.radio) {
       let station = this.state.station;
       station.frequency = 96900000;
@@ -56,19 +52,22 @@ class Player extends Component {
     }
   }
 
-  backward = () => {
+  handleBackward = () => {
 
   }
 
-  volume = (e) => {
+  handleVolume = (e) => {
     const volume = e.target.value / 100;
     this.state.radio.setVolume(volume);
+    this.setState({ volume });
   }
 
   render() {
     const { afs, chs, codec, frequency } = this.state.station;
-    const { hostname } = this.state;
+    const { hostname, playing } = this.state;
 
+    let status = ((playing) ? 'LIVE' : 'IDLE');
+    let statusColor = ((playing) ? '#00897B' : '#FF4242');
     let channel = ((chs == 2) ? 'STEREO' : 'MONO');
     let decoder = ((codec == Codec.Opus) ? 'OPUS' : 'WAV');
 
@@ -87,7 +86,11 @@ class Player extends Component {
           </div>
           <div className="information">
             <div className="left">
-              <div className="flag live">IDLE</div>
+              <div
+                className="flag"
+                style={{background: statusColor}}>
+                {status}
+              </div>
             </div>
             <div className="right">
               <div className="flag">{channel}</div>
@@ -96,20 +99,21 @@ class Player extends Component {
             </div>
           </div>
           <div className="controls">
-            <button onClick={this.backward}>
+            <button onClick={this.handleBackward}>
               <Feather.SkipBack />
             </button>
-            <button onClick={this.togglePlayback}>
+            <button onClick={this.handlePlayback}>
               {this.state.playing ? <Feather.Pause /> : <Feather.Play />}
             </button>
-            <button onClick={this.forward}>
+            <button onClick={this.handleForward}>
               <Feather.SkipForward />
             </button>
           </div>
           <div className="volume">
             <Feather.Volume1 />
             <input
-              onChange={this.volume}
+              value={this.state.volume*100}
+              onChange={this.handleVolume}
               className="slider"
               type="range"
               min="0"

@@ -21,7 +21,7 @@ ofs = int(1920)
 cuda = True
 
 radios = [
-    { "freq": 96.9e6, "bw": sfs, "afs": afs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO },
+    { "freq": 96.9e6, "bw": sfs, "afs": afs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO},
     { "freq": 97.5e6, "bw": sfs, "afs": afs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO},
 ]
 
@@ -71,17 +71,20 @@ async def blast():
                 encoded = opus[ir].encode_float(frame.tobytes(), len(frame)//2)
                 await sio.emit('data', encoded, room=address)
                 
+        await asyncio.sleep(0.1)
 
 async def radio():
     while True:
         for i in range(tuner.size//sdr_buff):
             sdr.readStream(rx, [buff[(i*sdr_buff):]], sdr_buff, timeoutUs=int(1e9))
         await queue.put(buff.astype(np.complex64))
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
 
 
 # Blast Settings
 print("# Blast Settings:")
+print("     URL: {}".format(url))
+print("     Port: {}".format(port))
 print("     Bandwidth: {}".format(tuner.bw))
 print("     Mean Frequency: {}".format(tuner.mdf))
 print("     Offsets: {}".format(tuner.foff))
@@ -108,13 +111,18 @@ async def leave(sid, message):
     sio.leave_room(sid, str(message))
     print("Removing SID", sid, "to room", str(message))
 
-async def handle(request):
+async def serve_meta(request):
     return web.json_response(radios)
+
+async def serve_webapp(request);
+    return web.
 
 async def serve():
     app.add_routes([
-        web.get('/', handle)
+        web.get('/meta', serve_meta),
+        web.get('/*', serve_webapp),
     ])
+    
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, url, port).start()

@@ -7,9 +7,11 @@ body, html {
 }
 
 .app {
-    justify-content: center;
-    align-items: center;
-    display: grid;
+    @media (min-width: 768px) {
+        justify-content: center;
+        align-items: center;
+        display: grid;
+    }
 }
 
 .header {
@@ -36,6 +38,7 @@ body, html {
 
 .block {
     border-radius: 0.75em;
+    margin: 0 .75em 0 .75em;
 }
 
 .block .block-body {

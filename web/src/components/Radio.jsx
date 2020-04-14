@@ -141,7 +141,7 @@ class Radio {
     //
     setVolume(volume) {
         if (volume > 1.0 || volume < 0.0) {
-            console.error("[RADIO] Volume range is 0.0 to 1.0.");
+            console.error("[RADIO] Volume range should be 0.0 to 1.0.");
             return;
         }
 

@@ -6,8 +6,8 @@
     font-family: 'Roboto Mono';
     font-weight: 300;
     font-size: 3.5em;
+    overflow: hidden;
 }
-
 
 .player .information {
     width: 100%;
@@ -51,10 +51,6 @@
     font-weight: 500;
 }
 
-.player .information .live {
-    background: #00897B !important;
-}
-
 .player .receiver {
     display: flex;
 }
@@ -68,6 +64,7 @@
     }
 
     svg {
+        margin-top: .01em;
         width: 3.5em;
     }
 }
