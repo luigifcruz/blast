@@ -3,87 +3,67 @@ import 'styles/volume';
 
 import * as Feather from 'react-feather';
 
+import { Codec, Radio } from 'components/Radio';
 import React, { Component } from 'react';
 import { inject, observer } from 'mobx-react';
+
 import { ParseFrequency } from 'misc/utils';
-import { Codec, Radio } from 'components/Radio';
 
 @inject('store')
 @observer
 class Player extends Component {
   constructor(props) {
     super(props);
-
     this.store = this.props.store;
-    this.state = {
-      radio: null,
-      playing: false,
-      volume: 1.0,
-      hostname: "ws://192.168.0.19:8080",
-      station: {
-        frequency: 173500000,
-        codec: Codec.Opus,
-        ofs: 1920,
-        afs: 48000,
-        chs: 2,
-      },
-    }
-  }
-
-  handlePlayback = () => {
-    const { playing, radio, hostname, station } = this.state;
-
-    if (radio) {
-      if (playing) {
-        radio.stop();
-      } else {
-        radio.tune(hostname, station);
-      }
-      this.setState({ playing: !playing });
-    }
-  }
-
-  handleForward = () => {
-    if (this.state.radio) {
-      let station = this.state.station;
-      station.frequency = 96900000;
-      this.setState({ station });
-      this.state.radio.tune(this.state.hostname, station);
-    }
-  }
-
-  handleBackward = () => {
-
   }
 
   handleVolume = (e) => {
     const volume = e.target.value / 100;
-    this.state.radio.setVolume(volume);
-    this.setState({ volume });
+    this.store.setVolume(volume);
   }
 
   render() {
-    const { afs, chs, codec, frequency } = this.state.station;
-    const { hostname, playing } = this.state;
+    const { playing, volume, selected } = this.store;
 
+    let flags = [
+      <div key={3} className="flag">DISCONNECTED</div>,
+    ];
+    
+    let frequency = "000,000,000";
+    let sourceName = "Not Connected";
+    let sourceDescription = "";
+    let sourceHost = "Select or add a station below.";
     let status = ((playing) ? 'LIVE' : 'IDLE');
     let statusColor = ((playing) ? '#00897B' : '#FF4242');
-    let channel = ((chs == 2) ? 'STEREO' : 'MONO');
-    let decoder = ((codec == Codec.Opus) ? 'OPUS' : 'WAV');
 
+    if (selected !== null) {    
+      let channel = ((selected.channels === 2) ? 'STEREO' : 'MONO');
+      let decoder = ((selected.codec === Codec.Opus) ? 'OPUS' : 'WAV');
+      let audio_fs = selected.audio_fs / 1000 + " kHz";
+
+      flags = [];
+      flags.push(<div key={0} className="flag">{channel}</div>);
+      flags.push(<div key={1} className="flag">{decoder}</div>);
+      flags.push(<div key={2} className="flag">{audio_fs}</div>);
+
+      sourceName = selected.name;
+      sourceHost = selected.host;
+      sourceDescription = selected.device + " • " + selected.backend;
+      frequency = ParseFrequency(selected.frequency);
+    }
+    
     return (
       <div className="block player">
         <label className="block-label">PLAYER</label>
         <div className="block-body">
           <div className="information small">
             <div className="flag">
-              <div>PU2SPY</div>
-              <div className="hostname">{hostname}</div>
+              <div>{sourceName}</div>
+              <div className="hostname">{sourceDescription}</div>
+              <div className="hostname">{sourceHost}</div>
             </div>
           </div>
-          <div className="frequency">
-            {ParseFrequency(frequency)}
-          </div>
+          <div className="frequency">{frequency}</div>
           <div className="information">
             <div className="left">
               <div
@@ -93,26 +73,24 @@ class Player extends Component {
               </div>
             </div>
             <div className="right">
-              <div className="flag">{channel}</div>
-              <div className="flag">{decoder}</div>
-              <div className="flag">{afs / 1000} kHz</div>
+              {flags.map((component) => component)}
             </div>
           </div>
           <div className="controls">
-            <button onClick={this.handleBackward}>
+            <button onClick={this.store.backward}>
               <Feather.SkipBack />
             </button>
-            <button onClick={this.handlePlayback}>
-              {this.state.playing ? <Feather.Pause /> : <Feather.Play />}
+            <button onClick={this.store.toggle}>
+              {this.store.playing ? <Feather.Pause /> : <Feather.Play />}
             </button>
-            <button onClick={this.handleForward}>
+            <button onClick={this.store.forward}>
               <Feather.SkipForward />
             </button>
           </div>
           <div className="volume">
             <Feather.Volume1 />
             <input
-              value={this.state.volume*100}
+              value={volume*100}
               onChange={this.handleVolume}
               className="slider"
               type="range"

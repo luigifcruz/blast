@@ -11,6 +11,7 @@ import importlib
 import SoapySDR
 import numpy as np
 from aiohttp import web
+import aiohttp_cors
 
 
 # Settings (add to yml)
@@ -19,10 +20,12 @@ sfs = int(240e3)
 afs = int(48e3)
 ofs = int(1920)
 cuda = True
+version = "1.0"
 
-radios = [
-    { "freq": 96.9e6, "bw": sfs, "afs": afs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO},
-    { "freq": 97.5e6, "bw": sfs, "afs": afs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO},
+stations = [
+    { "freq": 96.9e6, "bw": sfs, "afs": afs, "ofs": ofs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO},
+    { "freq": 94.5e6, "bw": sfs, "afs": afs, "ofs": ofs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO},
+    { "freq": 97.5e6, "bw": sfs, "afs": afs, "ofs": ofs, "chs": 2, "codec": opuslib.APPLICATION_AUDIO},
 ]
 
 # ZeroMQ Declaration
@@ -33,13 +36,13 @@ app = web.Application()
 sio.attach(app)
 
 # Radio-Core Declaration
-tuner = Tuner(radios, sfs, cuda=cuda)
-demod = [WBFM(tau, r['bw'], r['afs'], r['bw'], cuda=cuda) for r in radios]
+tuner = Tuner(stations, sfs, cuda=cuda)
+demod = [WBFM(tau, r['bw'], r['afs'], r['bw'], cuda=cuda) for r in stations]
 queue = asyncio.Queue()
 sdr_buff = 1200
 
 # OPUS Declaration
-opus = [opuslib.Encoder(r['afs'], r['chs'], r['codec']) for r in radios]
+opus = [opuslib.Encoder(r['afs'], r['chs'], r['codec']) for r in stations]
 
 # Radio Declaration
 args = dict(driver="lime")
@@ -61,7 +64,7 @@ async def blast():
         buffer = await queue.get()
         tuner.load(buffer) 
 
-        for ir, f in enumerate(radios):
+        for ir, f in enumerate(stations):
             L, R = demod[ir].run(tuner.run(ir))
             audio = np.ravel(np.column_stack((L, R))).astype(np.float32)
             address = str(int(f['freq']))
@@ -88,7 +91,7 @@ print("     Port: {}".format(port))
 print("     Bandwidth: {}".format(tuner.bw))
 print("     Mean Frequency: {}".format(tuner.mdf))
 print("     Offsets: {}".format(tuner.foff))
-print("     Radios: {}".format(len(radios)))
+print("     Stations: {}".format(len(stations)))
 
 # Start Collecting Data
 rx = sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
@@ -111,18 +114,33 @@ async def leave(sid, message):
     sio.leave_room(sid, str(message))
     print("Removing SID", sid, "to room", str(message))
 
-async def serve_meta(request):
-    return web.json_response(radios)
+routes = web.RouteTableDef()
 
-async def serve_webapp(request);
-    return web.
+cors = aiohttp_cors.setup(app, defaults={
+    "*": aiohttp_cors.ResourceOptions(
+        allow_credentials=True,
+        expose_headers="*",
+        allow_headers="*",
+    )
+})
+
+@routes.get('/meta')
+async def serve_meta(request):
+    return web.json_response({
+        'name': 'PU2SPY',
+        'device': 'LimeSDR Mini',
+        'backend': 'CUDA' if cuda else 'CPU',
+        'stations': stations, 
+        'version': version,
+    })
 
 async def serve():
-    app.add_routes([
-        web.get('/meta', serve_meta),
-        web.get('/*', serve_webapp),
-    ])
-    
+    app.add_routes(routes)
+
+    for route in list(app.router.routes()):
+        if route._resource.canonical not in '/socket.io/':
+            cors.add(route)
+
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, url, port).start()

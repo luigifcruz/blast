@@ -5,16 +5,37 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'mobx-react';
 import Store from 'stores/Store';
 
-let store = (window.store = new Store());
+class Async extends Component {
+  constructor(props) {
+      super(props);
+      this.state = {
+          store: null
+      };
+  }
+
+  componentDidMount() {
+      this.props.promise.then((store) => {
+        window.store = store;  
+        this.setState({ store });
+      });
+  }
+
+  render() {
+      if (this.state.store !== null) {
+        return (
+          <Provider store={this.state.store}>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </Provider>
+        )
+      }
+      return null;
+  }
+}
 
 export default class Client extends Component {
   render() {
-    return (
-      <Provider store={store}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </Provider>
-    );
+    return <Async promise={new Store()}/>;
   }
 }

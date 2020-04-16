@@ -7,6 +7,10 @@ import { inject, observer } from 'mobx-react';
 @observer
 class Finder extends Component {
 
+  handleSearch = () => {
+    this.props.store.addHost("hostname");
+  }
+
   render() {
     return (
       <div className="block finder">
@@ -14,7 +18,9 @@ class Finder extends Component {
         <div className="block-body">
           <div className="search">
             <input className="text-input" type="text"></input>
-            <button className="btn btn-gray btn-connect">
+            <button
+              onClick={this.handleSearch}
+              className="btn btn-gray btn-connect">
               <Feather.Search size={20} />
             </button>
           </div>

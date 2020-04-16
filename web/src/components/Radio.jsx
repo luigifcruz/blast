@@ -2,7 +2,7 @@ import io from 'socket.io-client';
 import libopus from 'libopus';
 
 const Codec = {
-    Opus: 1,
+    Opus: 2049,
 }
 
 class Radio {
@@ -142,13 +142,14 @@ class Radio {
     setVolume(volume) {
         if (volume > 1.0 || volume < 0.0) {
             console.error("[RADIO] Volume range should be 0.0 to 1.0.");
-            return;
+            return false;
         }
 
         this.volume = volume;
         if (this.gainNode !== null) {
             this.gainNode.gain.value = this.volume;
         }
+        return true;
     }
 
     tune(hostname, station) {
@@ -168,9 +169,9 @@ class Radio {
         this.station = {
             frequency: station.frequency,
             codec: station.codec,
-            ofs: station.ofs,
-            afs: station.afs,
-            chs: station.chs,
+            ofs: station.codec_fs,
+            afs: station.audio_fs,
+            chs: station.channels,
         };
 
         switch (this.station.codec) {
