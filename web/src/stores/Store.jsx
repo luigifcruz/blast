@@ -1,32 +1,8 @@
-import { Codec, Radio } from 'components/Radio';
 import { action, computed, observable } from 'mobx';
 
+import { Radio } from 'components/Radio';
 import _ from 'lodash';
 import request from 'superagent';
-
-var SIMM = {
-    frequency: 96900000,
-    codec: Codec.Opus,
-    codec_fs: 1920,
-    audio_fs: 48000,
-    channels: 2,
-    host: "ws://192.168.0.19:8080",
-    name: "PU2SPY",
-    device: "LimeSDR",
-    backend: "CUDA",
-}
-
-var SIMM2 = {
-    frequency: 97500000,
-    codec: Codec.Opus,
-    codec_fs: 1920,
-    audio_fs: 48000,
-    channels: 2,
-    host: "ws://192.168.0.19:8080",
-    name: "PU2SPY",
-    device: "LimeSDR",
-    backend: "CUDA",
-}
 
 export default class Store {
     @observable _hosts = new Set();
@@ -57,7 +33,10 @@ export default class Store {
     }
 
     @computed get stations() {
-        return [...this._stations];
+        return _.sortBy(
+            [...this._stations],
+            ["frequency", "name", "codec"]
+        );
     }
 
     @computed get groupedStations() {
@@ -76,8 +55,7 @@ export default class Store {
     }
 
     @action forward = () => {
-        const stations = _.sortBy(this.stations, ["frequency", "name"]);
-        const currentIdx = _.findIndex(stations, {
+        const currentIdx = _.findIndex(this.stations, {
             'host': this.selected.host,
             'frequency': this.selected.frequency,
             'codec': this.selected.codec,
@@ -97,8 +75,7 @@ export default class Store {
     }
 
     @action backward = () => {
-        const stations = _.sortBy(this.stations, ["frequency", "name"]);
-        const currentIdx = _.findIndex(stations, {
+        const currentIdx = _.findIndex(this.stations, {
             'host': this.selected.host,
             'frequency': this.selected.frequency,
             'codec': this.selected.codec,
