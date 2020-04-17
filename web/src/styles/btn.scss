@@ -13,6 +13,11 @@
   }
 }
 
+.btn:disabled {
+  color: $faint-background-text-color;
+  cursor: not-allowed;
+}
+
 @mixin btn-size($width, $height) {
   height: $height;
   width: $width;

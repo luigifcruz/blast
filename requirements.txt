@@ -1,0 +1,6 @@
+aiohttp
+opuslib
+socketio
+numpy
+aiohttp_cors
+json

@@ -127,9 +127,9 @@ cors = aiohttp_cors.setup(app, defaults={
 @routes.get('/meta')
 async def serve_meta(request):
     return web.json_response({
-        'name': 'PU2SPY',
+        'name': 'PU2SPY - Jetson Nano',
         'device': 'LimeSDR Mini',
-        'backend': 'CUDA' if cuda else 'CPU',
+        'backend': 'cuSignal (GPU)' if cuda else 'Scipy Signal (CPU)',
         'stations': stations, 
         'version': version,
     })

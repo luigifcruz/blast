@@ -14,9 +14,8 @@ export default class Store {
     @observable playing = false;
 
     constructor() {
-        this._hosts.add("http://192.168.0.19:8080");
         this._refreshStations();
-        
+
         return new Radio().then((radio) => {
             this._radio = radio;
             return this;
@@ -26,6 +25,10 @@ export default class Store {
     @action addHost(host) {
         this._hosts.add(host);
         this._refreshStations();
+    }
+
+    @action hostPreflight(host) {
+        return request.get(host + '/meta');
     }
 
     @computed get hosts() {
@@ -65,11 +68,7 @@ export default class Store {
             return;
         }
 
-        let nextIdx = currentIdx + 1;
-        if (nextIdx >= this.stations.length) {
-            nextIdx = 0;
-        }
-
+        let nextIdx = (currentIdx + 1) % this.stations.length;
         this.selected = this.stations[nextIdx];
         this._tune();
     }
@@ -85,11 +84,8 @@ export default class Store {
             return;
         }
 
-        let previousIdx = currentIdx - 1;
-        if (previousIdx < 0) {
-            previousIdx = this.stations.length - 1;
-        }
-
+        let length = this.stations.length;
+        let previousIdx = (currentIdx - 1 + length) % length;
         this.selected = this.stations[previousIdx];
         this._tune();
     }

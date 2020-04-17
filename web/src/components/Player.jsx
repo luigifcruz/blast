@@ -3,10 +3,10 @@ import 'styles/volume';
 
 import * as Feather from 'react-feather';
 
-import { Codec, Radio } from 'components/Radio';
 import React, { Component } from 'react';
 import { inject, observer } from 'mobx-react';
 
+import { Codec } from 'components/Radio';
 import { ParseFrequency } from 'misc/utils';
 
 @inject('store')
@@ -24,6 +24,7 @@ class Player extends Component {
 
   render() {
     const { playing, volume, selected } = this.store;
+    const ready = (selected !== null);
 
     let flags = [
       <div key={3} className="flag">DISCONNECTED</div>,
@@ -32,7 +33,7 @@ class Player extends Component {
     let frequency = "000,000,000";
     let sourceName = "Not Connected";
     let sourceDescription = "";
-    let sourceHost = "Select or add a station below.";
+    let sourceHost = "Select or add a source below.";
     let status = ((playing) ? 'LIVE' : 'IDLE');
     let statusColor = ((playing) ? '#00897B' : '#FF4242');
 
@@ -77,13 +78,13 @@ class Player extends Component {
             </div>
           </div>
           <div className="controls">
-            <button onClick={this.store.backward}>
+            <button disabled={!ready} onClick={this.store.backward}>
               <Feather.SkipBack />
             </button>
-            <button onClick={this.store.toggle}>
+            <button disabled={!ready} onClick={this.store.toggle}>
               {this.store.playing ? <Feather.Pause /> : <Feather.Play />}
             </button>
-            <button onClick={this.store.forward}>
+            <button disabled={!ready} onClick={this.store.forward}>
               <Feather.SkipForward />
             </button>
           </div>

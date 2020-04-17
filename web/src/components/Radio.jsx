@@ -105,7 +105,7 @@ class Radio {
         bufferSource.connect(this.gainNode);
 
         if (this.startTime < this.audioCtx.currentTime) {
-            this.startTime = this.audioCtx.currentTime + 0.05;
+            this.startTime = this.audioCtx.currentTime + 0.15;
         }
 
         bufferSource.start(this.startTime);
