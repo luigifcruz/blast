@@ -1,5 +1,4 @@
 from SoapySDR import SOAPY_SDR_RX, SOAPY_SDR_CF32
-from zmq.asyncio import Context, Poller
 from radio.analog import WBFM
 from radio.tools import Tuner
 

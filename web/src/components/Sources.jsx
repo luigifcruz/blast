@@ -24,7 +24,7 @@ class Sources extends Component {
             <div className="filler">
               <Feather.ArrowUp size={30}/>
               <p>Nothing Here</p>
-              <p>Add an address of a source above.</p>
+              <p>Add the address of a source above.</p>
             </div>
           ) : null}
           {sourcesKeys.map((host, i) => {

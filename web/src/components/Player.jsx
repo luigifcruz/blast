@@ -30,7 +30,7 @@ class Player extends Component {
       <div key={3} className="flag">DISCONNECTED</div>,
     ];
     
-    let frequency = "000,000,000";
+    let frequency = "00,000,000";
     let sourceName = "Not Connected";
     let sourceDescription = "";
     let sourceHost = "Select or add a source below.";
